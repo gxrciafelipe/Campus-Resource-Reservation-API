@@ -16,4 +16,4 @@
 - Double booking is not allowed if times overlap.
 
 ## One Design Decision I Made
-
+I added a purpose field to reservations so the system can track why a resource is being reserved.

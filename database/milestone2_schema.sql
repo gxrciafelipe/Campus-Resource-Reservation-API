@@ -74,3 +74,12 @@ INSERT INTO resources (resource_name, resource_type, location) VALUES
  
 INSERT INTO reservations (user_id, resource_id, start_time, end_time, status) VALUES
 (1, 1, '2026-02-01 10:00:00', '2026-02-01 11:00:00', 'active');
+
+-- Prevent reservations from ending before they start
+ALTER TABLE reservations
+ADD CONSTRAINT chk_reservation_time
+CHECK (end_time > start_time);
+
+-- Add purpose for why the reservation is made
+ALTER TABLE reservations
+ADD purpose VARCHAR(255) NULL;
