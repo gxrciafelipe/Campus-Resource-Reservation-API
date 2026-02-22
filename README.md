@@ -13,14 +13,27 @@ The Campus Resource Reservation API is a backend system designed to manage the r
 1. Install dependencies:
     ```bash
     npm install
-2. Start the server:
-    ```bash
-    npm start
-3. Visit the health route:
-    http://localhost:3000/health
+2. Configure your database connection in `src/db.js` with your MySQL credentials.
+3. Make sure your MySQL server is running and the `campus_reservation` database exists.
+4. Start the server:
+    ```
+    node src/server.js
+    ```
+5. The server will run at `http://localhost:3000`
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/users | Returns all users |
+| POST | /api/users | Creates a new user |
+| GET | /api/resources | Returns all resources |
+| POST | /api/resources | Creates a new resource |
+| GET | /api/reservations | Returns all reservations |
+| POST | /api/reservations | Creates a new reservation |
 
 ## Current Status
-Module 1 complete: Basic Express server setup with a test route. Database and API endpoints will be added in later modules.
+Milestone 3 complete: RESTful API endpoints implemented for users, resources, and reservations. All endpoints interact with a MySQL database and return JSON responses.
 
 ## Project Scope
 The Campus Resource Reservation API is a backend system responsible for managing reservations of shared campus resources. It provides a structured way for users to view resources and create, update, or cancel reservations through API requests.
