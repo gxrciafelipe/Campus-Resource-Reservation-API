@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const validate = require('../middleware/validateRequest');
 const { validateReservationTimes, validateResourceExists } = require('../middleware/businessRules');
+const auth = require('../middleware/authMiddleware');
 
 router.get('/', async (req, res) => {
   const [rows] = await db.query('SELECT * FROM reservations');
@@ -11,6 +12,7 @@ router.get('/', async (req, res) => {
 
 router.post(
   '/',
+  auth,                          // must be logged in
   validate(['user_id', 'resource_id', 'start_time', 'end_time']),
   validateReservationTimes,
   validateResourceExists,
