@@ -5,26 +5,34 @@ const validate = require('../middleware/validateRequest');
 const { validateReservationTimes, validateResourceExists } = require('../middleware/businessRules');
 const auth = require('../middleware/authMiddleware');
 
-router.get('/', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM reservations');
-  res.json(rows);
+router.get('/', async (req, res, next) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM reservations');
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post(
   '/',
-  auth,                          // must be logged in
+  auth,
   validate(['user_id', 'resource_id', 'start_time', 'end_time']),
   validateReservationTimes,
   validateResourceExists,
-  async (req, res) => {
-    const { user_id, resource_id, start_time, end_time } = req.body;
+  async (req, res, next) => {
+    try {
+      const { user_id, resource_id, start_time, end_time } = req.body;
 
-    const [result] = await db.query(
-      'INSERT INTO reservations (user_id, resource_id, start_time, end_time) VALUES (?, ?, ?, ?)',
-      [user_id, resource_id, start_time, end_time]
-    );
+      const [result] = await db.query(
+        'INSERT INTO reservations (user_id, resource_id, start_time, end_time) VALUES (?, ?, ?, ?)',
+        [user_id, resource_id, start_time, end_time]
+      );
 
-    res.status(201).json({ reservation_id: result.insertId });
+      res.status(201).json({ reservation_id: result.insertId });
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

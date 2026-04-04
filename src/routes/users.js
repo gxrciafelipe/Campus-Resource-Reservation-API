@@ -3,20 +3,28 @@ const router = express.Router();
 const db = require('../db');
 const validate = require('../middleware/validateRequest');
 
-router.get('/', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM users');
-  res.json(rows);
+router.get('/', async (req, res, next) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM users');
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.post('/', validate(['full_name', 'email']), async (req, res) => {
-  const { full_name, email, role } = req.body;
+router.post('/', validate(['full_name', 'email']), async (req, res, next) => {
+  try {
+    const { full_name, email, role } = req.body;
 
-  const [result] = await db.query(
-    'INSERT INTO users (full_name, email, role) VALUES (?, ?, ?)',
-    [full_name, email, role || 'student']
-  );
+    const [result] = await db.query(
+      'INSERT INTO users (full_name, email, role) VALUES (?, ?, ?)',
+      [full_name, email, role || 'user']
+    );
 
-  res.status(201).json({ user_id: result.insertId });
+    res.status(201).json({ user_id: result.insertId });
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;

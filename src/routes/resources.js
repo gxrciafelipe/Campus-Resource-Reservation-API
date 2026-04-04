@@ -5,25 +5,38 @@ const validate = require('../middleware/validateRequest');
 const auth = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/roleMiddleware');
 
-router.get('/', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM resources');
-  res.json(rows);
+router.get('/', async (req, res, next) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM resources');
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post(
   '/',
-  auth,                          // must be logged in
-  requireRole('admin'),          // must be an admin
+  auth,
+  requireRole('admin'),
   validate(['resource_name', 'resource_type']),
-  async (req, res) => {
-    const { resource_name, resource_type, location } = req.body;
+  async (req, res, next) => {
+    try {
+      const { resource_name, resource_type, location } = req.body;
 
-    const [result] = await db.query(
-      'INSERT INTO resources (resource_name, resource_type, location) VALUES (?, ?, ?)',
-      [resource_name, resource_type, location]
-    );
+      // Validation: location is required as a business rule
+      if (!location) {
+        return res.status(400).json({ error: 'location is required' });
+      }
 
-    res.status(201).json({ resource_id: result.insertId });
+      const [result] = await db.query(
+        'INSERT INTO resources (resource_name, resource_type, location) VALUES (?, ?, ?)',
+        [resource_name, resource_type, location]
+      );
+
+      res.status(201).json({ resource_id: result.insertId });
+    } catch (err) {
+      next(err);
+    }
   }
 );
 
