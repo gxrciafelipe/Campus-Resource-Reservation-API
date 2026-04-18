@@ -10,15 +10,23 @@ const validateReservationTimes = (req, res, next) => {
   next();
 };
 
-// Middleware that checks if the requested resource actually exists in the database
+// Middleware that checks if the requested resource exists in the database
+// Uses SELECT 1 instead of SELECT * to avoid fetching unnecessary data
 // This prevents reservations from being created for resources that don't exist
 const validateResourceExists = async (req, res, next) => {
-  const { resource_id } = req.body;
-  const [resource] = await db.query('SELECT * FROM resources WHERE resource_id = ?', [resource_id]);
-  if (resource.length === 0) {
-    return res.status(400).json({ error: 'Resource does not exist' });
+  try {
+    const { resource_id } = req.body;
+    const [rows] = await db.query(
+      'SELECT 1 FROM resources WHERE resource_id = ? LIMIT 1',
+      [resource_id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Resource does not exist' });
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 };
 
 module.exports = { validateReservationTimes, validateResourceExists };

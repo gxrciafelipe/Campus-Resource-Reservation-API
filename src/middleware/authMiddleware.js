@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const SECRET_KEY = 'your_secret_key';
+const { JWT_SECRET } = require('../config');
 
 // Middleware that checks if a valid JWT token is present in the request headers
 module.exports = (req, res, next) => {
@@ -17,7 +16,7 @@ module.exports = (req, res, next) => {
   try {
     // Verify the token and attach the decoded payload to req.user
     // This makes user info available to any middleware or route handler that runs after
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
