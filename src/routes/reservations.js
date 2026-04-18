@@ -5,15 +5,21 @@ const validate = require('../middleware/validateRequest');
 const { validateReservationTimes, validateResourceExists } = require('../middleware/businessRules');
 const auth = require('../middleware/authMiddleware');
 
+// GET /api/reservations
+// Returns only the needed fields instead of SELECT *
 router.get('/', async (req, res, next) => {
   try {
-    const [rows] = await db.query('SELECT * FROM reservations');
+    const [rows] = await db.query(
+      'SELECT reservation_id, user_id, resource_id, start_time, end_time FROM reservations'
+    );
     res.json(rows);
   } catch (err) {
     next(err);
   }
 });
 
+// POST /api/reservations
+// Validation and business rule checks run before the insert query
 router.post(
   '/',
   auth,
