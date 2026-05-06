@@ -1,119 +1,155 @@
 # Campus Resource Reservation API
 
-## Project Description
-The Campus Resource Reservation API is a backend system designed to manage the reservation of campus resources. It allows users to view available resources and create, update, or cancel reservations through API requests.
+## Project Overview
 
-## Technologies Used
-- Node.js
-- Express.js
-- MySQL
-- mysql2
-- bcrypt
-- jsonwebtoken
-- Git & GitHub
+The Campus Resource Reservation API is a backend system that manages the reservation of campus resources such as study rooms and equipment. Users can register, log in, browse available resources, and create reservations. Administrators have additional access to create resources and manage the system. This is a backend-only project with no frontend — it is designed to be tested via Postman or any HTTP client.
 
-## How to Run Locally
-1. Install dependencies:
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Node.js | JavaScript runtime |
+| Express.js | HTTP routing and middleware |
+| MySQL | Relational database |
+| mysql2 | MySQL client for Node.js |
+| bcrypt | Password hashing |
+| jsonwebtoken | JWT-based authentication |
+| dotenv | Environment variable management |
+
+## Setup Instructions
+
+1. Clone the repository:
 ```bash
-    npm install
+git clone https://github.com/gxrciafelipe/Campus-Resource-Reservation-API.git
+cd Campus-Resource-Reservation-API
 ```
-2. Configure your database connection in `src/config.js` with your MySQL credentials.
-3. Make sure your MySQL server is running and the `campus_reservation` database exists.
-4. Start the server:
+
+2. Install dependencies:
 ```bash
-    node src/server.js
-```
-5. The server will run at `http://localhost:3000`
-
-## Project Structure
-```
-src/
-├── app.js                      # Express app setup and middleware registration
-├── server.js                   # Server entry point
-├── db.js                       # MySQL connection pool
-├── config.js                   # Centralized configuration (JWT secret, DB, port)
-├── middleware/
-│   ├── authMiddleware.js       # JWT token verification
-│   ├── businessRules.js        # Reservation time and resource existence checks
-│   ├── errorHandler.js         # Centralized error response handler
-│   ├── requestLogger.js        # Logs every incoming request with timestamp
-│   ├── roleMiddleware.js       # Role-based access control (e.g. admin only)
-│   └── validateRequest.js      # Required field validation
-└── routes/
-    ├── auth.js                 # POST /auth/register, POST /auth/login
-    ├── reservations.js         # GET/POST /api/reservations
-    ├── resources.js            # GET/POST /api/resources
-    └── users.js                # GET/POST /api/users
+npm install
 ```
 
-## API Endpoints
+3. Copy the environment variables file and fill in your values:
+```bash
+cp .env.example .env
+```
+
+4. Initialize the database (see section below).
+
+5. Start the server:
+```bash
+npm start
+```
+
+## Environment Variables
+
+Create a `.env` file in the root of the project with the following variables:
+
+| Variable | Description |
+|---|---|
+| PORT | Port the server runs on (default: 3000) |
+| DB_HOST | MySQL host (usually localhost) |
+| DB_USER | MySQL username |
+| DB_PASSWORD | MySQL password |
+| DB_NAME | Database name (campus_reservation) |
+| JWT_SECRET | Secret key used to sign JWT tokens |
+
+Example:
+```
+PORT=3000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=campus_reservation
+JWT_SECRET=somesecretkey
+```
+
+## Database Initialization Steps
+
+1. Make sure MySQL is running.
+2. Run the schema file:
+```bash
+mysql -u root -p < database/milestone2_schema.sql
+```
+
+This will create the `campus_reservation` database, create all tables, and insert sample data.
+
+## Authentication Overview
+
+This API uses JWT (JSON Web Token) authentication.
+
+- Register a user via `POST /auth/register`
+- Log in via `POST /auth/login` — you will receive a token
+- Include the token in the `Authorization` header for all protected routes:
+```
+Authorization: Bearer <your_token>
+```
+- Tokens expire after **1 hour**
+- Users with role `admin` can access admin-only endpoints like creating resources
+
+## API Endpoint Summary
 
 ### Authentication
 | Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
+|---|---|---|---|
 | POST | /auth/register | No | Register a new user |
 | POST | /auth/login | No | Login and receive a JWT token |
 
 ### Users
 | Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | /api/users | No | Returns all users (excludes passwords) |
-| POST | /api/users | No | Creates a new user |
+|---|---|---|---|
+| GET | /api/users | No | Returns all users (password excluded) |
+| POST | /api/users | No | Creates a new user directly |
 
 ### Resources
 | Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
+|---|---|---|---|
 | GET | /api/resources | No | Returns all resources |
 | POST | /api/resources | Yes (admin) | Creates a new resource |
 
 ### Reservations
 | Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
+|---|---|---|---|
 | GET | /api/reservations | No | Returns all reservations |
 | POST | /api/reservations | Yes | Creates a new reservation |
 
-## Middleware Flow
+## How to Run the Project Locally
 
-Requests pass through middleware in this order:
+1. Make sure MySQL is running on your machine.
+2. Make sure your `.env` file exists with valid credentials.
+3. Run the database schema if you haven't already:
+```bash
+mysql -u root -p < database/milestone2_schema.sql
+```
+4. Install dependencies and start:
+```bash
+npm install
+npm start
+```
+5. Test the server is running:
+```bash
+curl http://localhost:3000/api/resources
+```
+You should get back a JSON array.
 
-1. **requestLogger** — logs every request before anything else runs
-2. **express.json()** — parses request body
-3. **auth** (on protected routes) — verifies JWT token before any business logic
-4. **requireRole** (on admin routes) — checks user role after auth confirms identity
-5. **validate** — checks that required fields are present before processing
-6. **businessRules** — validates domain logic (e.g. time range, resource existence)
-7. **route handler** — executes the database operation
-8. **errorHandler** — catches any forwarded errors and sends a consistent JSON response
+## Project Structure
 
-## Refinement and Optimization
-
-### What Was Cleaned Up
-
-**Centralized Configuration (`src/config.js`)**
-The `JWT_SECRET` was previously hardcoded in two separate files (`auth.js` and `authMiddleware.js`). The database credentials were also hardcoded directly in `db.js`. All of these values are now defined once in `src/config.js` and imported wherever they are needed. This eliminates duplication and makes future changes (like rotating the secret or changing the database host) a one-line update.
-
-**Fixed Misspelled Filename**
-`bussinessRules.js` was renamed to `businessRules.js`. Misspelled filenames cause confusion and potential import errors on case-sensitive file systems.
-
-**Removed Inline Validation from Route Handlers**
-In `resources.js`, the `location` field was being validated with a manual `if (!location)` check inside the route handler body. This logic was moved into the `validate` middleware call at the route level, keeping handlers consistent and reducing the amount of logic inside handler functions.
-
-**Added Error Handling to Auth Routes**
-The `auth.js` routes were missing `try/catch` blocks. Any unhandled database error would crash the request without a proper response. All route handlers now forward errors to the centralized `errorHandler` via `next(err)`.
-
-**Replaced `SELECT *` with Specific Columns**
-All GET routes previously used `SELECT *`. Each route now selects only the columns the client actually needs. The users route explicitly excludes the `password` field. The `validateResourceExists` middleware was also updated to use `SELECT 1` since it only needs to confirm a row exists, not retrieve any data.
-
-**Fixed `package.json` Start Script**
-The `start` and `dev` scripts pointed to `src/app.js`, which does not start the server. They now correctly point to `src/server.js`.
-
-### Why These Changes Matter
-
-- **Maintainability**: A single place to update shared values like secrets and credentials means fewer bugs when things change.
-- **Security**: Removing `SELECT *` from the users query ensures the hashed password field is never accidentally sent to a client.
-- **Performance**: Using `SELECT 1 LIMIT 1` in existence checks avoids loading unnecessary data from the database.
-- **Consistency**: All route handlers now follow the same pattern — validate first, then execute — making the codebase easier to read and extend.
-- **Reliability**: Every async route handler is wrapped in `try/catch`, so all errors are routed to the centralized error handler instead of crashing silently.
-
-## Current Status
-Milestone 7 complete: Codebase refactored for clarity, maintainability, and efficiency. No new features added — focus was on improving code quality and structure.
+```
+src/
+├── app.js                  # Express app setup
+├── server.js               # Entry point
+├── db.js                   # MySQL connection pool
+├── config.js               # Centralized config and environment variables
+├── middleware/
+│   ├── authMiddleware.js   # JWT verification
+│   ├── businessRules.js    # Reservation time and resource validation
+│   ├── errorHandler.js     # Centralized error responses
+│   ├── requestLogger.js    # Logs all incoming requests
+│   ├── roleMiddleware.js   # Role-based access control
+│   └── validateRequest.js  # Required field validation
+└── routes/
+    ├── auth.js             # /auth/register, /auth/login
+    ├── reservations.js     # /api/reservations
+    ├── resources.js        # /api/resources
+    └── users.js            # /api/users
+```
